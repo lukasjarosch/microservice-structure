@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package greeter;
+
+import "google/api/annotations.proto";
+
+
+service Hello {
+    rpc Greeting(GreetingRequest) returns (GreetingResponse) {
+        option (google.api.http) = {
+            post: "/v1/greeting"
+            body: "*"
+        };
+    }
+}
+
+message GreetingRequest {
+    string name = 1;
+}
+
+message GreetingResponse {
+    string greeting = 1;
+}
