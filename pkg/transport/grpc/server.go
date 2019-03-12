@@ -6,8 +6,10 @@ import (
 	"net"
 	"google.golang.org/grpc"
 	"os"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os/signal"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/lukasjarosch/microservice-structure/pkg/transport/grpc/interceptors"
 )
 
 func RunServer(ctx context.Context, service greeter.HelloServer, port string) error {
@@ -16,8 +18,16 @@ func RunServer(ctx context.Context, service greeter.HelloServer, port string) er
 	    return err
 	}
 
-	// register service
-	server := grpc.NewServer()
+	// create new gRPC server including middleware
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			interceptors.LogUnaryInterceptor(),
+		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			interceptors.LogStreamInterceptor(),
+		)),
+	)
+
 	greeter.RegisterHelloServer(server, service)
 
 	// graceful shutdown
@@ -25,13 +35,13 @@ func RunServer(ctx context.Context, service greeter.HelloServer, port string) er
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			logrus.Info("shutting down ...")
+			log.Info("shutting down gRPC server ...")
 			server.GracefulStop()
 			<- ctx.Done()
 		}
 	}()
 
 	// start the gRPC server
-	logrus.Infof("starting gRPC server on :%s ...", port)
+	log.Infof("starting gRPC server on :%s ...", port)
 	return server.Serve(listen)
 }

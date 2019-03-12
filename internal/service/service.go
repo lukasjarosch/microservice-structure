@@ -3,17 +3,24 @@ package service
 import (
 	"context"
 
+	"github.com/lukasjarosch/microservice-structure/internal/config"
 	api "github.com/lukasjarosch/microservice-structure/pkg"
-	"github.com/sirupsen/logrus"
 )
 
-type exampleService struct{}
+type exampleService struct {
+	config *config.Config
+}
 
-func NewExampleService() api.HelloServer {
-	return &exampleService{}
+func NewExampleService(config *config.Config) api.HelloServer {
+	return &exampleService{
+		config: config,
+	}
 }
 
 func (e *exampleService) Greeting(ctx context.Context, request *api.GreetingRequest) (*api.GreetingResponse, error) {
-	logrus.Infof("call to Greeting() with: %v", request)
 	return &api.GreetingResponse{Greeting: "Hello there, " + request.Name}, nil
+}
+
+func (e *exampleService) Farewell(ctx context.Context, request *api.FarewellRequest) (*api.FarewellResponse, error) {
+	return &api.FarewellResponse{Farewell: "Goodbye, " + request.Name}, nil
 }

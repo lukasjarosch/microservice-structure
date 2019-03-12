@@ -32,7 +32,7 @@ func RunServer(ctx context.Context, grpcPort, httpPort string) error {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			logrus.Info("shutting down ...")
+			logrus.Info("shutting down HTTP gateway ...")
 			// todo: properly handle
 			<- ctx.Done()
 		}
