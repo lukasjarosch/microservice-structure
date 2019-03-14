@@ -20,6 +20,7 @@ type server struct {
 	streamingMiddleware []grpc.StreamServerInterceptor
 }
 
+// NewServer returns a configured gRPC server
 func NewServer(ctx context.Context, service greeter.HelloServer, grpcPort string) *server {
 	return &server{
 		ctx:            ctx,
@@ -27,15 +28,18 @@ func NewServer(ctx context.Context, service greeter.HelloServer, grpcPort string
 		port:           grpcPort,
 	}
 }
-
+// AddUnaryInterceptor registers an unary interceptor
 func (s *server) AddUnaryInterceptor(interceptor grpc.UnaryServerInterceptor) {
 	s.unaryMiddleware = append(s.unaryMiddleware, interceptor)
 }
 
+// AddStreamingInterceptor registers a streaming interceptor
 func (s *server) AddStreamingInterceptor(interceptor grpc.StreamServerInterceptor) {
 	s.streamingMiddleware = append(s.streamingMiddleware, interceptor)
 }
 
+// Run opens the TCP port for the server, registers all interceptors, provides a graceful shutdown handler and then
+// serves the gRPC server
 func (s *server) Run() error {
 	listen, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
