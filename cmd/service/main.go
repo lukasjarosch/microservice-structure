@@ -9,6 +9,7 @@ import (
 	svc "github.com/lukasjarosch/microservice-structure/internal/service"
 	"github.com/lukasjarosch/microservice-structure/pkg/transport/grpc"
 	"github.com/lukasjarosch/microservice-structure/pkg/transport/http"
+	"github.com/lukasjarosch/microservice-structure/pkg/transport/grpc/interceptors"
 )
 
 // Compile time variables are injected
@@ -33,7 +34,12 @@ func main() {
 		http.RunServer(ctx, "50051", "8080")
 	}()
 
-	err := grpc.RunServer(ctx, service, "50051")
+	// setup gRPC and run
+	grpcServer := grpc.NewServer(ctx, service, config.GrpcPort)
+	grpcServer.AddUnaryInterceptor(interceptors.LogUnaryInterceptor())
+	grpcServer.AddStreamingInterceptor(interceptors.LogStreamInterceptor())
+
+	err := grpcServer.Run()
 	if err != nil {
 		fmt.Fprint(os.Stderr, "%v\n", err)
 		os.Exit(1)

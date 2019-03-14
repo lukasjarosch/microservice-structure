@@ -9,6 +9,8 @@ type Config struct {
 	GitCommit string
 	GitBranch string
 	BuildTime string
+	GrpcPort string
+	HttpPort string
 }
 
 func NewConfig(commit, branch, buildTime string) *Config {
@@ -17,5 +19,7 @@ func NewConfig(commit, branch, buildTime string) *Config {
 		GitBranch: branch,
 		BuildTime: buildTime,
 		LogLevel: os.Getenv("LOG_LEVEL"),
+		GrpcPort: "50051",
+		HttpPort: "8080",
 	}
 }

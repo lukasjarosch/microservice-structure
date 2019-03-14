@@ -2,33 +2,57 @@ package grpc
 
 import (
 	"context"
-	"github.com/lukasjarosch/microservice-structure/pkg"
 	"net"
-	"google.golang.org/grpc"
 	"os"
-	log "github.com/sirupsen/logrus"
 	"os/signal"
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/lukasjarosch/microservice-structure/pkg/transport/grpc/interceptors"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	greeter "github.com/lukasjarosch/microservice-structure/pkg"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
-func RunServer(ctx context.Context, service greeter.HelloServer, port string) error {
-	listen, err := net.Listen("tcp", ":"+port)
+type server struct {
+	ctx                 context.Context
+	implementation      greeter.HelloServer
+	port                string
+	unaryMiddleware     []grpc.UnaryServerInterceptor
+	streamingMiddleware []grpc.StreamServerInterceptor
+}
+
+func NewServer(ctx context.Context, service greeter.HelloServer, grpcPort string) *server {
+	return &server{
+		ctx:            ctx,
+		implementation: service,
+		port:           grpcPort,
+	}
+}
+
+func (s *server) AddUnaryInterceptor(interceptor grpc.UnaryServerInterceptor) {
+	s.unaryMiddleware = append(s.unaryMiddleware, interceptor)
+}
+
+func (s *server) AddStreamingInterceptor(interceptor grpc.StreamServerInterceptor) {
+	s.streamingMiddleware = append(s.streamingMiddleware, interceptor)
+}
+
+func (s *server) Run() error {
+	listen, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
-	    return err
+		return err
 	}
 
 	// create new gRPC server including middleware
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			interceptors.LogUnaryInterceptor(),
+			s.unaryMiddleware...,
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			interceptors.LogStreamInterceptor(),
+			s.streamingMiddleware...,
 		)),
 	)
 
-	greeter.RegisterHelloServer(server, service)
+	greeter.RegisterHelloServer(server, s.implementation)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)
@@ -37,11 +61,11 @@ func RunServer(ctx context.Context, service greeter.HelloServer, port string) er
 		for range c {
 			log.Info("shutting down gRPC server ...")
 			server.GracefulStop()
-			<- ctx.Done()
+			<-s.ctx.Done()
 		}
 	}()
 
 	// start the gRPC server
-	log.Infof("starting gRPC server on :%s ...", port)
+	log.Infof("starting gRPC server on :%s ...", s.port)
 	return server.Serve(listen)
 }
