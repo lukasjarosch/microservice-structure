@@ -13,3 +13,7 @@ GO_SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 .PHONY: build
 build: $(GO_SRC)
 	@go build -ldflags "${LDFLAGS}" -o build/service cmd/service/main.go
+
+.PHONY: run
+run:
+	@go run -ldflags "${LDFLAGS}" cmd/service/main.go
