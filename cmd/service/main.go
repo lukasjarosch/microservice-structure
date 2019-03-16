@@ -25,7 +25,7 @@ var (
 )
 
 func main() {
-	config := cfg.NewConfig(GitCommit, GitBranch, BuildTime)
+	config := cfg.NewConfig()
 	logger := initLogging(config.LogDebug)
 
 	// setup waitgroup with length 2 for http and grpc servers
