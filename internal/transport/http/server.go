@@ -3,47 +3,51 @@ package http
 import (
 	"context"
 	"net/http"
-	"os"
-	"os/signal"
-	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/lukasjarosch/microservice-structure/internal"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"github.com/lukasjarosch/microservice-structure/internal"
 )
 
-func RunServer(ctx context.Context, logger *zap.SugaredLogger, grpcPort, httpPort string) error {
+type server struct {
+	logger   *zap.SugaredLogger
+	grpcPort string
+	httpPort string
+	context  context.Context
+	server *http.Server
+}
+
+func NewServer(logger *zap.SugaredLogger, grpcPort, httpPort string) *server {
+	return &server{
+		logger:   logger,
+		grpcPort: grpcPort,
+		httpPort: httpPort,
+	}
+}
+
+func (s *server) Run() error {
+	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
+	s.context = ctx
 	defer cancel()
 
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
-	if err := internal.RegisterHelloHandlerFromEndpoint(ctx, mux, "localhost:"+grpcPort, opts); err != nil {
-		logger.Errorw("failed to start HTTP gateway", "err", err)
+	if err := internal.RegisterHelloHandlerFromEndpoint(ctx, mux, "localhost:"+s.grpcPort, opts); err != nil {
+		s.logger.Errorw("failed to start HTTP gateway", "err", err)
 		return err
 	}
 
-	srv := &http.Server{
-		Addr:    ":" + httpPort,
+	s.server = &http.Server{
+		Addr:    ":" + s.httpPort,
 		Handler: mux, // todo: add middleware/interceptors
 	}
 
-	// graceful shutdown
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			logger.Info("shutting down HTTP gateway ...")
-			// todo: properly handle
-			<-ctx.Done()
-		}
-		_, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
+	s.logger.Infof("starting HTTP/JSON gateway on port %s", s.httpPort)
+	return s.server.ListenAndServe()
+}
 
-		_ = srv.Shutdown(ctx)
-	}()
-
-	logger.Infof("starting HTTP/JSON gateway on :%s...", httpPort)
-	return srv.ListenAndServe()
+func (s *server) GracefulShutdown() {
+	s.server.Shutdown(s.context)
 }

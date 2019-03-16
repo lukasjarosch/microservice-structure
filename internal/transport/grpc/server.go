@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"os"
-	"os/signal"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
@@ -15,18 +14,18 @@ import (
 )
 
 type server struct {
-	ctx            context.Context
+	stop           chan os.Signal
 	implementation greeter.HelloServer
 	port           string
 	logger         *zap.SugaredLogger
+	server         *grpc.Server
 }
 
 // NewServer returns a configured gRPC server
 // Interceptors to the server can be added through AddUnaryInterceptor() and AddStreamingInterceptor()
 // Interceptors provide a way to inject middleware into the transport layer server (gRPC server).
-func NewServer(ctx context.Context, logger *zap.SugaredLogger, service greeter.HelloServer, grpcPort string) *server {
+func NewServer(logger *zap.SugaredLogger, service greeter.HelloServer, grpcPort string) *server {
 	return &server{
-		ctx:            ctx,
 		implementation: service,
 		port:           grpcPort,
 		logger:         logger,
@@ -42,7 +41,7 @@ func (s *server) Run() error {
 	}
 
 	// create new gRPC server including middleware
-	server := grpc.NewServer(
+	s.server = grpc.NewServer(
 
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
@@ -60,20 +59,13 @@ func (s *server) Run() error {
 		)),
 	)
 
-	greeter.RegisterHelloServer(server, s.implementation)
+	// register service implementation
+	greeter.RegisterHelloServer(s.server, s.implementation)
 
-	// graceful shutdown
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			s.logger.Info("shutting down gRPC server ...")
-			server.GracefulStop()
-			<-s.ctx.Done()
-		}
-	}()
-
-	// start the gRPC server
 	s.logger.Infof("starting gRPC server on port %s", s.port)
-	return server.Serve(listen)
+	return s.server.Serve(listen)
+}
+
+func (s *server) GracefulShutdown() {
+	s.server.GracefulStop()
 }
