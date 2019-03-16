@@ -44,7 +44,7 @@ func (s *server) Run() error {
 	mux.Handle("/", gw)
 
 	// add prometheus
-	mux.Handle("/metrics/", promhttp.Handler())
+	mux.Handle(s.metricsPath, promhttp.Handler())
 
 	s.server = &http.Server{
 		Addr:    ":" + s.httpPort,
