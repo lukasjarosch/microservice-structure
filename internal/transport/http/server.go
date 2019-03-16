@@ -4,25 +4,26 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/lukasjarosch/microservice-structure/internal"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type server struct {
-	logger   *zap.SugaredLogger
-	grpcPort string
-	httpPort string
-	context  context.Context
-	server *http.Server
+	logger      *zap.SugaredLogger
+	grpcPort    string
+	httpPort    string
+	context     context.Context
+	server      *http.Server
+	metricsPath string
 }
 
-func NewServer(logger *zap.SugaredLogger, grpcPort, httpPort string) *server {
+func NewServer(logger *zap.SugaredLogger, grpcPort, httpPort string, metricsPath string) *server {
 	return &server{
-		logger:   logger,
-		grpcPort: grpcPort,
-		httpPort: httpPort,
+		logger:      logger,
+		grpcPort:    grpcPort,
+		httpPort:    httpPort,
+		metricsPath: metricsPath,
 	}
 }
 
@@ -32,12 +33,18 @@ func (s *server) Run() error {
 	s.context = ctx
 	defer cancel()
 
-	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()}
-	if err := internal.RegisterHelloHandlerFromEndpoint(ctx, mux, "localhost:"+s.grpcPort, opts); err != nil {
-		s.logger.Errorw("failed to start HTTP gateway", "err", err)
+	mux := http.NewServeMux()
+
+	// gRPC HTTP gateway
+	var gwOpts []gwruntime.ServeMuxOption
+	gw, err := newGateway(ctx, s.grpcPort, gwOpts)
+	if err != nil {
 		return err
 	}
+	mux.Handle("/", gw)
+
+	// add prometheus
+	mux.Handle("/metrics/", promhttp.Handler())
 
 	s.server = &http.Server{
 		Addr:    ":" + s.httpPort,

@@ -5,9 +5,10 @@ import (
 	"net"
 	"os"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	greeter "github.com/lukasjarosch/microservice-structure/internal"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -40,6 +41,8 @@ func (s *server) Run() error {
 		return err
 	}
 
+	grpc_prometheus.EnableHandlingTimeHistogram()
+
 	// create new gRPC server including middleware
 	s.server = grpc.NewServer(
 
@@ -51,11 +54,13 @@ func (s *server) Run() error {
 				return true
 			}),
 			grpc_zap.UnaryServerInterceptor(s.logger.Desugar()),
+			grpc_prometheus.UnaryServerInterceptor,
 		)),
 
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 			grpc_zap.StreamServerInterceptor(s.logger.Desugar()),
+			grpc_prometheus.StreamServerInterceptor,
 		)),
 	)
 

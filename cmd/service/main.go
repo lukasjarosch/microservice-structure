@@ -39,8 +39,9 @@ func main() {
 	service := svc.NewExampleService(config, logger)
 	logger.Infow("starting ExampleService", "git.commit", GitCommit, "git.branch", GitBranch, "build.date", BuildTime)
 
-	// http gateway to gRPC server
-	httpServer := http.NewServer(logger, config.GrpcPort, config.HttpPort)
+	// setup http gateway including prometheus metrics
+
+	httpServer := http.NewServer(logger, config.GrpcPort, config.HttpPort, config.MetricsPath)
 	go func() {
 		if err := httpServer.Run(); err != http2.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
