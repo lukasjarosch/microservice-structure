@@ -32,6 +32,7 @@ going back to go-kit. But currently I do not want any framework.
 + multistage Dockerfile
 + Jenkins is used for CI/CD
 + Services will run on Kubernetes
++ AMQP is used to publish / subscribe events
 
 
 ## Features

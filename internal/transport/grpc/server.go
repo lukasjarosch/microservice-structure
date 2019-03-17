@@ -73,4 +73,5 @@ func (s *server) Run() error {
 
 func (s *server) GracefulShutdown() {
 	s.server.GracefulStop()
+	s.logger.Info("gRPC server shut down")
 }
