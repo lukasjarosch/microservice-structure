@@ -3,13 +3,11 @@ package http
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
-	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 	"github.com/lukasjarosch/microservice-structure/internal"
+	"google.golang.org/grpc"
 )
 
 // newGateway returns a new gateway server which translates HTTP into gRPC.
@@ -17,7 +15,7 @@ func newGateway(ctx context.Context, conn *grpc.ClientConn, opts []gwruntime.Ser
 
 	mux := gwruntime.NewServeMux(opts...)
 
-	for _, f := range []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error {
+	for _, f := range []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 		internal.RegisterHelloHandler,
 	} {
 		if err := f(ctx, mux, conn); err != nil {
