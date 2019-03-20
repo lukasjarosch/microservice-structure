@@ -33,6 +33,10 @@ going back to go-kit. But currently I do not want any framework.
 + Jenkins is used for CI/CD
 + Services will run on Kubernetes
 
+## Where are the protobufs / swagger specs?
+As I've stated above, i keep them separate. You can find them here: [lukasjarosch/microservice-structure-protobuf](https://github.com/lukasjarosch/microservice-structure-protobuf)
+
+That repository (contract-repository) defines the APIs of all our services.
 
 ## Features
  - [x] ENV only configuration
