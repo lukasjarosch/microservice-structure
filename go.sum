@@ -25,6 +25,10 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxv
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/lukasjarosch/microservice-structure-protobuf v0.0.0-20190320192231-8f64c60ffdfa h1:JY9ogZ3dvuyS14ibnsjzZeLHV08tyhEHeleC6oT1U8k=
+github.com/lukasjarosch/microservice-structure-protobuf v0.0.0-20190320192231-8f64c60ffdfa/go.mod h1:LKqysqqFbLWPMeSHqIwpMQUuVu21Vr8StCObbS4rEVY=
+github.com/lukasjarosch/microservice-structure-protobuf v0.0.0-20190320192838-e24918195952 h1:9YSatM12Lm27+WnmwDwvHkFQDpzLkKw3SZUkpgVIi+k=
+github.com/lukasjarosch/microservice-structure-protobuf v0.0.0-20190320192838-e24918195952/go.mod h1:LKqysqqFbLWPMeSHqIwpMQUuVu21Vr8StCObbS4rEVY=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

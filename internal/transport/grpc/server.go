@@ -9,7 +9,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
-	greeter "github.com/lukasjarosch/microservice-structure/internal"
+	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -67,7 +67,7 @@ func (s *server) Run() error {
 	// register service implementation
 	greeter.RegisterHelloServer(s.server, s.implementation)
 
-	s.logger.Infof("starting gRPC server on port %s", s.port)
+	s.logger.Infof("starting gRPC server on :%s", s.port)
 	return s.server.Serve(listen)
 }
 
