@@ -74,7 +74,7 @@ func Run(ctx context.Context, opts Options) error {
 		opts.Logger.Info("HTTP server shut down")
 	}()
 
-	opts.Logger.Infof("HTTP server listening on port %s", opts.Addr)
+	opts.Logger.Infof("HTTP server listening on %s", opts.Addr)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		opts.Logger.Errorw("failed to listen and serve", "err", err)
 		return err

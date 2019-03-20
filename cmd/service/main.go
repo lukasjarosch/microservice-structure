@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"os/signal"
 	"syscall"
@@ -39,8 +38,7 @@ func main() {
 	logger.Infow("starting ExampleService", "git.commit", GitCommit, "git.branch", GitBranch, "build.date", BuildTime)
 
 	// setup http gateway including prometheus metrics
-	httpCancelCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+	httpCancelCtx, cancel := context.WithCancel(context.Background())
 	go func() {
 		defer wg.Done()
 		http.Run(httpCancelCtx, http.Options{
@@ -66,11 +64,12 @@ func main() {
 	}()
 
 	// handle signals gracefully
-	go func() {
+	go func(cancelHttp context.CancelFunc) {
 		waitForSignal()
+		logger.Info("shutdown requested")
 		grpcServer.GracefulShutdown()
-		httpCancelCtx.Done()
-	}()
+		cancelHttp()
+	}(cancel)
 
 	wg.Wait()
 	os.Exit(0)
