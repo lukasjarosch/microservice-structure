@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"os/signal"
 	"syscall"
+
+	"sync"
 
 	cfg "github.com/lukasjarosch/microservice-structure/internal/config"
 	svc "github.com/lukasjarosch/microservice-structure/internal/service"
@@ -13,8 +16,6 @@ import (
 	"github.com/lukasjarosch/microservice-structure/internal/transport/http"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"sync"
-	http2 "net/http"
 )
 
 // Compile time variables are injected
@@ -32,22 +33,23 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// todo: config
-	// todo: amqp
-	// todo: mysql/mongodb
-
+	// setup service implementation (gRPC server handler)
 	service := svc.NewExampleService(config, logger)
 	logger.Infow("starting ExampleService", "git.commit", GitCommit, "git.branch", GitBranch, "build.date", BuildTime)
 
 	// setup http gateway including prometheus metrics
-
-	httpServer := http.NewServer(logger, config.GrpcPort, config.HttpPort, config.MetricsPath)
+	httpCancelCtx, cancel := context.WithCancel(context.Background())
 	go func() {
-		if err := httpServer.Run(); err != http2.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
-		}
 		defer wg.Done()
+		http.Run(httpCancelCtx, http.Options{
+			Logger:      logger,
+			MetricsPath: config.MetricsPath,
+			Addr:        fmt.Sprintf(":%s", config.HttpPort),
+			GRPCServer: http.Endpoint{
+				Network: "tcp",
+				Addr:    fmt.Sprintf(":%s", config.GrpcPort),
+			},
+		})
 	}()
 
 	// setup gRPC transport layer
@@ -61,14 +63,16 @@ func main() {
 		defer wg.Done()
 	}()
 
-	go func() {
+	// handle signals gracefully
+	go func(cancelHttp context.CancelFunc) {
 		waitForSignal()
+		logger.Info("shutdown requested")
 		grpcServer.GracefulShutdown()
-		httpServer.GracefulShutdown()
-	}()
+		cancelHttp()
+	}(cancel)
 
 	wg.Wait()
-	logger.Info("shut down")
+	os.Exit(0)
 }
 
 // initLogging initializes a new zap productionLogger and returns the sugared logger

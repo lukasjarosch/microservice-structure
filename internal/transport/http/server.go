@@ -9,52 +9,76 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type server struct {
-	logger      *zap.SugaredLogger
-	grpcPort    string
-	httpPort    string
-	context     context.Context
-	server      *http.Server
-	metricsPath string
+// Endpoint describes a single gRPC endpoint
+type Endpoint struct {
+	Network, Addr string
 }
 
-func NewServer(logger *zap.SugaredLogger, grpcPort, httpPort string, metricsPath string) *server {
-	return &server{
-		logger:      logger,
-		grpcPort:    grpcPort,
-		httpPort:    httpPort,
-		metricsPath: metricsPath,
-	}
+// Options is a set of options to be passed to Run
+type Options struct {
+	// Addr is the listen address
+	Addr string
+	// GRPCServe defines an endpoint of the gRPC service
+	GRPCServer Endpoint
+	// Mux defines the options passed to the grpc-gateway multiplexer
+	Mux []gwruntime.ServeMuxOption
+	// Logger
+	Logger *zap.SugaredLogger
+	// MetricsPath is the endpoint where the prometheus handler handles on
+	MetricsPath string
 }
 
-func (s *server) Run() error {
-	ctx := context.Background()
+// Run will start an HTTP server and blocks while running
+// Once the context is cancelled, the server will shut down
+func Run(ctx context.Context, opts Options) error {
 	ctx, cancel := context.WithCancel(ctx)
-	s.context = ctx
 	defer cancel()
 
+	conn, err := dial(ctx, opts.GRPCServer.Network, opts.GRPCServer.Addr)
+	if err != nil {
+	    return err
+	}
+
+	go func() {
+		<-ctx.Done()
+		opts.Logger.Debug("closing HTTP connections")
+		if err := conn.Close(); err != nil {
+			opts.Logger.Errorw("failed to close a client connection to the gRPC server", "err", err)
+		}
+		opts.Logger.Debug("HTTP connections closed")
+	}()
+
+	// setup multiplexer
 	mux := http.NewServeMux()
+	mux.Handle(opts.MetricsPath, promhttp.Handler())
 
 	// gRPC HTTP gateway
-	var gwOpts []gwruntime.ServeMuxOption
-	gw, err := newGateway(ctx, s.grpcPort, gwOpts)
+	gw, err := newGateway(ctx, conn, opts.Mux)
 	if err != nil {
 		return err
 	}
 	mux.Handle("/", gw)
 
-	// add prometheus
-	mux.Handle(s.metricsPath, promhttp.Handler())
 
-	s.server = &http.Server{
-		Addr:    ":" + s.httpPort,
-		Handler: mux, // todo: add middleware/interceptors
+	srv := &http.Server{
+		Addr:    opts.Addr,
+		Handler: mux,
 	}
 
-	s.logger.Infof("starting HTTP/JSON gateway on port %s", s.httpPort)
-	return s.server.ListenAndServe()
+	go func() {
+		<- ctx.Done()
+		opts.Logger.Info("shutting down HTTP server")
+		if err := srv.Shutdown(context.Background()); err != nil {
+			opts.Logger.Errorw("failed to shutdown HTTP server", "err", err)
+		}
+		opts.Logger.Info("HTTP server shut down")
+	}()
+
+	opts.Logger.Infof("HTTP server listening on %s", opts.Addr)
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		opts.Logger.Errorw("failed to listen and serve", "err", err)
+		return err
+	}
+	return nil
 }
 
-func (s *server) GracefulShutdown() {
-	s.server.Shutdown(s.context)
-}

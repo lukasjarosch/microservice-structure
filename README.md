@@ -32,6 +32,7 @@ going back to go-kit. But currently I do not want any framework.
 + multistage Dockerfile
 + Jenkins is used for CI/CD
 + Services will run on Kubernetes
++ AMQP is used to publish / subscribe events
 
 ## Where are the protobufs / swagger specs?
 As I've stated above, i keep them separate. You can find them here: [lukasjarosch/microservice-structure-protobuf](https://github.com/lukasjarosch/microservice-structure-protobuf)
