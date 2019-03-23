@@ -39,7 +39,7 @@ func main() {
 	service.ServeMetrics()
 
 	// and off we go ...
-	if err := service.ServerGRPC(); err != nil {
+	if err := service.ServeGRPC(); err != nil {
 		logger.Fatal(err)
 	}
 }

@@ -32,7 +32,7 @@ func NewServer(opts ...Option) *Server {
 	options := &Options{
 		ID:   fmt.Sprintf("%s-%s", "godin", uuid.New().String()),
 		Name: "godin",
-		ServerConfig: Config{
+		ServerConfig: GrpcServerConfig{
 			Network: Network{
 				Host: "0.0.0.0",
 				Port: 50051,
@@ -65,8 +65,8 @@ func NewServer(opts ...Option) *Server {
 	}
 }
 
-// ServerGRPC will serve a gRPC server
-func (s *Server) ServerGRPC() error {
+// ServeGRPC will serve a gRPC server
+func (s *Server) ServeGRPC() error {
 	listener, err := net.Listen("tcp", s.Options.ServerConfig.Network.Address())
 	if err != nil {
 		return err

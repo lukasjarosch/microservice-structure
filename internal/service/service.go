@@ -36,6 +36,11 @@ func NewExampleService(config *config.Config, logger *logrus.Logger) *godin.Serv
 	server := godin.NewServer(
 		godin.Name("examle"),
 		godin.Implementation(impl),
+
+		// Override config with env variables configured by our business domain
+		godin.GrpcNetworkPort(config.GrpcPort),
+		godin.PrometheusNetworkPort(config.PrometheusPort),
+		godin.PrometheusEndpoint(config.MetricsEndpoint),
 	)
 	return server
 }
