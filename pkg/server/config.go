@@ -9,12 +9,13 @@ type Network struct {
 	Host string
 }
 
+// Address returns the concatenated Host:Port combination as string
 func (n *Network) Address() string {
 	return fmt.Sprintf("%s:%d", n.Host, n.Port)
 }
 
-// ServerConfig holds the gRPC server configuration
-type Config struct {
+// GrpcServerConfig holds the gRPC server configuration
+type GrpcServerConfig struct {
 	Network Network
 }
 

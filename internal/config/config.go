@@ -9,7 +9,10 @@ import (
 
 // ServerConfig holds the service configuration
 type Config struct {
-	LogDebug    bool   `env:"LOG_DEBUG" envDefault:"false"`
+	LogDebug        bool   `env:"LOG_DEBUG" envDefault:"false"`
+	GrpcPort        int    `env:"GRPC_PORT" envDefault:"50051"`
+	PrometheusPort  int    `env:"PROMETHEUS_PORT" envDefault:"9000"`
+	MetricsEndpoint string `env:"METRICS_ENDPOINT" envDefault:"/metrics"`
 }
 
 // NewConfig returns a new ServerConfig. The configuration is parsed from environment variables.
