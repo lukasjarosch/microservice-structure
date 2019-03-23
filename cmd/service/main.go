@@ -12,6 +12,7 @@ import (
 	"github.com/lukasjarosch/microservice-structure/pkg/grpc"
 	"github.com/lukasjarosch/microservice-structure/pkg/http"
 	"github.com/sirupsen/logrus"
+	"github.com/lukasjarosch/microservice-structure/internal/database"
 )
 
 // Compile time variables are injected
@@ -27,7 +28,7 @@ func main() {
 	logger := initLogging(config.LogDebug)
 
 	// setup our ExampleService
-	service := svc.NewExampleService(config, logger)
+	service := svc.NewExampleService(config, logger, database.MockRepository{})
 	logger.WithFields(logrus.Fields{
 		"instance":   service.Options.ID,
 		"git.commit": GitCommit,
@@ -38,7 +39,7 @@ func main() {
 	// If you want to have a HTTP/JSON gateway you can easily start it up like this
 	gatewayServer, err := http.GatewayServer(service.Options.ServerConfig.Network, greeter.RegisterHelloHandler)
 	if err != nil {
-		logger.Fatal("failed to start the HTTP gateway server: %v", err)
+		logger.Fatalf("failed to start the HTTP gateway server: %v", err)
 		os.Exit(-1)
 	}
 	gatewayServer.ServeHTTP()

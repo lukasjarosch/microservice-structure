@@ -13,6 +13,10 @@ SERVICE_NAME="greeter"
 DOCKER_IMAGE="lukasjarosch/microservice-structure"
 DOCKER_TAG="v-${COMMIT}"
 
+.PHONY: test
+test:
+	@go test -v ./...
+
 .PHONY: build
 build: $(GO_SRC)
 	@go build -ldflags "${LDFLAGS}" -o build/service cmd/service/main.go
