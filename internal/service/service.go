@@ -5,7 +5,7 @@ import (
 
 	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	"github.com/lukasjarosch/microservice-structure/internal/config"
-	godin "github.com/lukasjarosch/microservice-structure/pkg/server"
+	godin "github.com/lukasjarosch/microservice-structure/pkg/grpc"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
@@ -46,6 +46,7 @@ func NewExampleService(config *config.Config, logger *logrus.Logger) *godin.Serv
 }
 
 func (e *exampleService) Greeting(ctx context.Context, request *greeter.GreetingRequest) (*greeter.GreetingResponse, error) {
+	e.logger.Info("ohai")
 	return &greeter.GreetingResponse{Greeting: "Hello there, " + request.Name}, nil
 }
 

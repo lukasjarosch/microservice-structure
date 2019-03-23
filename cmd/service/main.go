@@ -6,10 +6,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	cfg "github.com/lukasjarosch/microservice-structure/internal/config"
 	svc "github.com/lukasjarosch/microservice-structure/internal/service"
+	"github.com/lukasjarosch/microservice-structure/pkg/grpc"
+	"github.com/lukasjarosch/microservice-structure/pkg/http"
 	"github.com/sirupsen/logrus"
-	"github.com/lukasjarosch/microservice-structure/pkg/server"
 )
 
 // Compile time variables are injected
@@ -26,19 +28,28 @@ func main() {
 
 	// setup our ExampleService
 	service := svc.NewExampleService(config, logger)
-
 	logger.WithFields(logrus.Fields{
-		"instance": service.Options.ID,
+		"instance":   service.Options.ID,
 		"git.commit": GitCommit,
 		"git.branch": GitBranch,
-		"build": BuildTime,
+		"build":      BuildTime,
 	}).Infof("starting service: %s", service.Options.Name)
 
-	// goroutines
-	go signalHandler(service)
+	// If you want to have a HTTP/JSON gateway you can easily start it up like this
+	gatewayServer, err := http.GatewayServer(service.Options.ServerConfig.Network, greeter.RegisterHelloHandler)
+	if err != nil {
+		logger.Fatal("failed to start the HTTP gateway server: %v", err)
+		os.Exit(-1)
+	}
+	gatewayServer.ServeHTTP()
+
+	// graceful shutdown using signals (SIGINT and SIGTERM)
+	go shutdownHandler(service, gatewayServer)
+
+	// HTTP server providing Prometheus metrics
 	service.ServeMetrics()
 
-	// and off we go ...
+	// finally: serve the gRPC server in the foreground
 	if err := service.ServeGRPC(); err != nil {
 		logger.Fatal(err)
 	}
@@ -57,7 +68,7 @@ func initLogging(debug bool) *logrus.Logger {
 }
 
 // wait for SIGINT or SIGTERM and then call Shutdown()
-func signalHandler(service *server.Server) {
+func shutdownHandler(service *grpc.Server, gateway *http.Server) {
 	sigs := make(chan os.Signal, 1)
 
 	signal.Notify(sigs, syscall.SIGINT)
@@ -65,4 +76,5 @@ func signalHandler(service *server.Server) {
 	logrus.Infof("signal: %v", <-sigs)
 
 	service.Shutdown()
+	gateway.Shutdown()
 }
