@@ -1,0 +1,105 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "greeter.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/farewell": {
+      "post": {
+        "operationId": "Farewell",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/greeterFarewellResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/greeterFarewellRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Hello"
+        ]
+      }
+    },
+    "/v1/greeting": {
+      "post": {
+        "operationId": "Greeting",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/greeterGreetingResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/greeterGreetingRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Hello"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "greeterFarewellRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "greeterFarewellResponse": {
+      "type": "object",
+      "properties": {
+        "farewell": {
+          "type": "string"
+        }
+      }
+    },
+    "greeterGreetingRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "greeterGreetingResponse": {
+      "type": "object",
+      "properties": {
+        "greeting": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,21 +1,15 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"os"
 
 	"os/signal"
 	"syscall"
 
-	"sync"
-
 	cfg "github.com/lukasjarosch/microservice-structure/internal/config"
 	svc "github.com/lukasjarosch/microservice-structure/internal/service"
-	"github.com/lukasjarosch/microservice-structure/internal/transport/grpc"
-	"github.com/lukasjarosch/microservice-structure/internal/transport/http"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"github.com/sirupsen/logrus"
+	"github.com/lukasjarosch/microservice-structure/pkg/server"
 )
 
 // Compile time variables are injected
@@ -29,74 +23,31 @@ func main() {
 	config := cfg.NewConfig()
 	logger := initLogging(config.LogDebug)
 
-	// setup waitgroup with length 2 for http and grpc servers
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	// setup service implementation (gRPC server handler)
 	service := svc.NewExampleService(config, logger)
-	logger.Infow("starting ExampleService", "git.commit", GitCommit, "git.branch", GitBranch, "build.date", BuildTime)
 
-	// setup http gateway including prometheus metrics
-	httpCancelCtx, cancel := context.WithCancel(context.Background())
-	go func() {
-		defer wg.Done()
-		http.Run(httpCancelCtx, http.Options{
-			Logger:      logger,
-			MetricsPath: config.MetricsPath,
-			Addr:        fmt.Sprintf(":%s", config.HttpPort),
-			GRPCServer: http.Endpoint{
-				Network: "tcp",
-				Addr:    fmt.Sprintf(":%s", config.GrpcPort),
-			},
-		})
-	}()
+	go signalHandler(service)
 
-	// setup gRPC transport layer
-	grpcServer := grpc.NewServer(logger, service, config.GrpcPort)
-	go func() {
-		err := grpcServer.Run()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
-		}
-		defer wg.Done()
-	}()
+	service.ServeMetrics()
 
-	// handle signals gracefully
-	go func(cancelHttp context.CancelFunc) {
-		waitForSignal()
-		logger.Info("shutdown requested")
-		grpcServer.GracefulShutdown()
-		cancelHttp()
-	}(cancel)
-
-	wg.Wait()
-	os.Exit(0)
+	if err := service.ServerGRPC(); err != nil {
+		logger.Fatal(err)
+	}
 }
 
 // initLogging initializes a new zap productionLogger and returns the sugared logger
-func initLogging(debug bool) *zap.SugaredLogger {
-	pe := zap.NewProductionEncoderConfig()
-	pe.EncodeTime = zapcore.ISO8601TimeEncoder
-	consoleEncoder := zapcore.NewConsoleEncoder(pe)
-	level := zap.InfoLevel
+func initLogging(debug bool) *logrus.Entry {
+	logger := logrus.New()
 
-	if debug {
-		level = zap.DebugLevel
-		pe.EncodeLevel = zapcore.LowercaseColorLevelEncoder
-	}
-
-	core := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level)
-	l := zap.New(core)
-
-	return l.Sugar()
+	return logrus.NewEntry(logger)
 }
 
-// wait for SIGINT or SIGTERM
-func waitForSignal() {
+// wait for SIGINT or SIGTERM and then call Shutdown()
+func signalHandler(service *server.Server) {
 	sigs := make(chan os.Signal, 1)
+
 	signal.Notify(sigs, syscall.SIGINT)
 	signal.Notify(sigs, syscall.SIGTERM)
-	<-sigs
+	logrus.Infof("signal: %v", <-sigs)
+
+	service.Shutdown()
 }
