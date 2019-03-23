@@ -13,7 +13,7 @@ func (n *Network) Address() string {
 	return fmt.Sprintf("%s:%d", n.Host, n.Port)
 }
 
-// Config holds the gRPC server configuration
+// ServerConfig holds the gRPC server configuration
 type Config struct {
 	Network Network
 }

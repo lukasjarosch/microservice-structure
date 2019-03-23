@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	 "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -27,11 +27,12 @@ type Server struct {
 	PrometheusHTTPServer *http.Server
 }
 
+// NewServer constructs a new Server with the given options
 func NewServer(opts ...Option) *Server {
 	options := &Options{
 		ID:   fmt.Sprintf("%s-%s", "godin", uuid.New().String()),
 		Name: "godin",
-		Config: Config{
+		ServerConfig: Config{
 			Network: Network{
 				Host: "0.0.0.0",
 				Port: 50051,
@@ -66,12 +67,12 @@ func NewServer(opts ...Option) *Server {
 
 // ServerGRPC will serve a gRPC server
 func (s *Server) ServerGRPC() error {
-	listener, err := net.Listen("tcp", s.Options.Config.Network.Address())
+	listener, err := net.Listen("tcp", s.Options.ServerConfig.Network.Address())
 	if err != nil {
 		return err
 	}
 
-	logrus.Infof("serving gRPC server at %s", s.Options.Config.Network.Address())
+	logrus.Infof("serving gRPC server at %s", s.Options.ServerConfig.Network.Address())
 	return s.createGrpcServer().Serve(listener)
 }
 
@@ -94,6 +95,7 @@ func (s *Server) ServeMetrics() {
 	}()
 }
 
+// Shutdown handles the graceful shutdown of the gRPC server and the Prometheus HTTP server
 func (s *Server) Shutdown() {
 	s.GRPCServer.GracefulStop()
 

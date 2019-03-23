@@ -26,8 +26,8 @@ type Options struct {
 	GRPCImplementation GRPCImplementation
 
 	// configuration
-	GRPCOptions        []grpc.ServerOption
-	Config           Config
+	GRPCOptions      []grpc.ServerOption
+	ServerConfig     Config
 	PrometheusConfig PrometheusConfig
 }
 
@@ -46,7 +46,7 @@ func Implementation(impl GRPCImplementation) Option {
 	}
 }
 
-func PrometheusCopnfig(config PrometheusConfig) Option {
+func PrometheusConfiguration(config PrometheusConfig) Option {
 	return func(opts *Options) {
 		opts.PrometheusConfig = config
 	}
