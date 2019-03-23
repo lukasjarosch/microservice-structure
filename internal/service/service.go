@@ -46,6 +46,7 @@ func NewExampleService(config *config.Config, logger *logrus.Logger) *godin.Serv
 }
 
 func (e *exampleService) Greeting(ctx context.Context, request *greeter.GreetingRequest) (*greeter.GreetingResponse, error) {
+	e.logger.Info("ohai")
 	return &greeter.GreetingResponse{Greeting: "Hello there, " + request.Name}, nil
 }
 
