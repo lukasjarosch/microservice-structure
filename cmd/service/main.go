@@ -9,7 +9,7 @@ import (
 	cfg "github.com/lukasjarosch/microservice-structure/internal/config"
 	svc "github.com/lukasjarosch/microservice-structure/internal/service"
 	"github.com/sirupsen/logrus"
-	"github.com/lukasjarosch/microservice-structure/pkg/server"
+	"github.com/lukasjarosch/microservice-structure/pkg/grpc"
 )
 
 // Compile time variables are injected
@@ -57,7 +57,7 @@ func initLogging(debug bool) *logrus.Logger {
 }
 
 // wait for SIGINT or SIGTERM and then call Shutdown()
-func signalHandler(service *server.Server) {
+func signalHandler(service *grpc.Server) {
 	sigs := make(chan os.Signal, 1)
 
 	signal.Notify(sigs, syscall.SIGINT)

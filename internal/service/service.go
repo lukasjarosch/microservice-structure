@@ -5,7 +5,7 @@ import (
 
 	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	"github.com/lukasjarosch/microservice-structure/internal/config"
-	godin "github.com/lukasjarosch/microservice-structure/pkg/server"
+	godin "github.com/lukasjarosch/microservice-structure/pkg/grpc"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
