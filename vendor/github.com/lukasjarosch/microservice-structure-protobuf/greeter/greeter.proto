@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package greeter;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+
+service Hello {
+    rpc Greeting(GreetingRequest) returns (GreetingResponse) {
+        option (google.api.http) = {
+            post: "/v1/greeting"
+            body: "*"
+        };
+    }
+    rpc Farewell(FarewellRequest) returns (FarewellResponse) {
+        option (google.api.http) = {
+            post: "/v1/farewell"
+            body: "*"
+        };
+    }
+}
+
+message GreetingRequest {
+    string name = 1;
+}
+
+message GreetingResponse {
+    string greeting = 1;
+}
+
+message FarewellRequest {
+    string name = 1;
+}
+
+message FarewellResponse {
+    string farewell = 1;
+}
