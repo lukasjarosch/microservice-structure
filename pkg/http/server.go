@@ -8,17 +8,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Endpoint wraps a HTTP endpoint
 type Endpoint struct {
 	Pattern string
 	Handler http.Handler
 }
 
+// Server wraps a http.Server
 type Server struct {
 	Options    *Options
 	HTTPServer *http.Server
 	Endpoints  []Endpoint
 }
 
+// NewServer returns a pre-configured http.Server
 func NewServer(opts ...Option) *Server {
 	options := &Options{
 		Network: Network{
@@ -36,10 +39,12 @@ func NewServer(opts ...Option) *Server {
 	}
 }
 
+// AddEndpoint adds an enpoint to the server
 func (s *Server) AddEndpoint(endpoint Endpoint) {
 	s.Endpoints = append(s.Endpoints, endpoint)
 }
 
+// ServeHTTP will serve the HTTP server in a goroutine
 func (s *Server) ServeHTTP() {
 	s.HTTPServer = &http.Server{Addr: s.Options.Network.Address()}
 
