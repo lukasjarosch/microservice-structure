@@ -6,7 +6,6 @@ import (
 	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	"github.com/lukasjarosch/microservice-structure/internal/config"
 	godin "github.com/lukasjarosch/microservice-structure/pkg/server"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
@@ -25,19 +24,10 @@ func NewExampleService(config *config.Config, log *logrus.Entry) *godin.Server {
 		greeter.RegisterHelloServer(g, handler)
 	}
 
-	// Deliberately set as many options as possible, just for showing off.
-	// Take a look at pkg/server/server.go for the default values
+	// See pkg/server/server.go for the default options
 	return godin.NewServer(
 		godin.Name("examle"),
 		godin.Implementation(impl),
-		godin.PrometheusCopnfig(godin.PrometheusConfig{
-			Endpoint:         "/metrics",
-			HistogramBuckets: prometheus.ExponentialBuckets(0.005, 1.4, 20),
-			Network: godin.Network{
-				Host: "0.0.0.0",
-				Port: 9000,
-			},
-		}),
 	)
 }
 
