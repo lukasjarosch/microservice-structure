@@ -1,28 +1,29 @@
 package config
 
 import (
-	"log"
-	"os"
-
-	"github.com/caarlos0/env"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
+	"github.com/lukasjarosch/microservice-structure/pkg/config"
 )
 
 // ServerConfig holds the service configuration
 type Config struct {
-	LogDebug        bool   `env:"LOG_DEBUG" envDefault:"false"`
-	GrpcPort        int    `env:"GRPC_PORT" envDefault:"50051"`
-	PrometheusPort  int    `env:"PROMETHEUS_PORT" envDefault:"9000"`
-	MetricsEndpoint string `env:"METRICS_ENDPOINT" envDefault:"/metrics"`
+	LogDebug        bool   `envconfig:"LOG_DEBUG" default:"false"`
+	GrpcPort        int    `envconfig:"GRPC_PORT" default:"50051"`
+	PrometheusPort  int    `envconfig:"PROMETHEUS_PORT" default:"9000"`
+	MetricsEndpoint string `envconfig:"METRICS_ENDPOINT" default:"/metrics"`
+	MongoDB config.MongoDBConfiguration
 }
 
 // NewConfig returns a new ServerConfig. The configuration is parsed from environment variables.
 // Default values are only set if an environment variable is not set
 func NewConfig() *Config {
-	cfg := &Config{}
-	err := env.Parse(cfg)
+	var cfg Config
+
+	err := envconfig.Process("", &cfg)
 	if err != nil {
-		log.Fatalf("unable to parse config: %v", err)
-		os.Exit(1)
+	    logrus.WithError(err).Fatal("unable to process configuration")
 	}
-	return cfg
+
+	return &cfg
 }

@@ -25,6 +25,8 @@ func main() {
 	config := cfg.NewConfig()
 	logger := initLogging(config.LogDebug)
 
+	logger.Info(config.MongoDB.Address)
+
 	// setup our ExampleService gRPC server
 	server := svc.NewExampleServiceServer(config, logger)
 	logger.WithFields(logrus.Fields{
