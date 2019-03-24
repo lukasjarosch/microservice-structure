@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"github.com/lukasjarosch/microservice-structure/pkg/config"
 )
 
 type GRPCImplementation func(s *grpc.Server)
@@ -33,12 +34,12 @@ func NewServer(opts ...Option) *Server {
 		ID:   fmt.Sprintf("%s-%s", "godin", uuid.New().String()),
 		Name: "godin",
 		ServerConfig: GrpcServerConfig{
-			Network: Network{
+			Network: config.Network{
 				Host: "0.0.0.0",
 				Port: 50051,
 			}},
 		PrometheusConfig: PrometheusConfig{
-			Network: Network{
+			Network: config.Network{
 				Host: "0.0.0.0",
 				Port: 9000,
 			},

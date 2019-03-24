@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/lukasjarosch/microservice-structure/pkg/config"
 )
 
 // Endpoint wraps a HTTP endpoint
@@ -24,7 +25,7 @@ type Server struct {
 // NewServer returns a pre-configured http.Server
 func NewServer(opts ...Option) *Server {
 	options := &Options{
-		Network: Network{
+		Network: config.Network{
 			Host: "0.0.0.0",
 			Port: 8080,
 		},

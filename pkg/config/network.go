@@ -1,7 +1,8 @@
-package http
+package config
 
 import "fmt"
 
+// Network defines a common host:port configuration
 type Network struct {
 	Port int
 	Host string
