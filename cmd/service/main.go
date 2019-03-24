@@ -6,9 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	cfg "github.com/lukasjarosch/microservice-structure/internal/config"
-	svc "github.com/lukasjarosch/microservice-structure/internal/service"
+	svc "github.com/lukasjarosch/microservice-structure/internal/server"
 	"github.com/lukasjarosch/microservice-structure/pkg/grpc"
 	"github.com/lukasjarosch/microservice-structure/pkg/http"
 	"github.com/sirupsen/logrus"
@@ -26,31 +25,27 @@ func main() {
 	config := cfg.NewConfig()
 	logger := initLogging(config.LogDebug)
 
-	// setup our ExampleService
-	service := svc.NewExampleService(config, logger)
+	// setup our ExampleService gRPC server
+	server := svc.NewExampleServiceServer(config, logger)
 	logger.WithFields(logrus.Fields{
-		"instance":   service.Options.ID,
+		"instance":   server.GRPC.Options.ID,
 		"git.commit": GitCommit,
 		"git.branch": GitBranch,
 		"build":      BuildTime,
-	}).Infof("starting service: %s", service.Options.Name)
+	}).Infof("starting server: %s", server.GRPC.Options.Name)
 
-	// If you want to have a HTTP/JSON gateway you can easily start it up like this
-	gatewayServer, err := http.GatewayServer(service.Options.ServerConfig.Network, greeter.RegisterHelloHandler)
-	if err != nil {
-		logger.Fatal("failed to start the HTTP gateway server: %v", err)
-		os.Exit(-1)
-	}
-	gatewayServer.ServeHTTP()
+	// If you have setup a gateway inside the server, don't forget to start it :)
+	server.HTTPGateway.ServeHTTP()
 
 	// graceful shutdown using signals (SIGINT and SIGTERM)
-	go shutdownHandler(service, gatewayServer)
+	// the GRPC shutdown handler will also take care of the prometheus HTTP server
+	go shutdownHandler(server.GRPC, server.HTTPGateway)
 
-	// HTTP server providing Prometheus metrics
-	service.ServeMetrics()
+	// HTTP server providing Prometheus metrics is included in the gRPC server
+	server.GRPC.ServeMetrics()
 
 	// finally: serve the gRPC server in the foreground
-	if err := service.ServeGRPC(); err != nil {
+	if err := server.GRPC.Serve(); err != nil {
 		logger.Fatal(err)
 	}
 }
