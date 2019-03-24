@@ -44,7 +44,7 @@ func NewExampleServiceServer(config *config.Config, logger *logrus.Logger) *exam
 	// register HTTP gateway
 	gatewayServer, err := http.GatewayServer(server.Options.ServerConfig.Network, greeter.RegisterHelloHandler)
 	if err != nil {
-		logger.Fatal("failed to setup the HTTP gateway server: %v", err)
+		logger.Fatalf("failed to setup the HTTP gateway server: %v", err)
 	}
 
 	return &exampleServiceServer{
