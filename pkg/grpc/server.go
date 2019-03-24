@@ -65,8 +65,8 @@ func NewServer(opts ...Option) *Server {
 	}
 }
 
-// ServeGRPC will serve a gRPC server
-func (s *Server) ServeGRPC() error {
+// Serve will serve a gRPC server
+func (s *Server) Serve() error {
 	listener, err := net.Listen("tcp", s.Options.ServerConfig.Network.Address())
 	if err != nil {
 		return err
