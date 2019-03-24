@@ -34,3 +34,7 @@ docker-run:
 		--name ${SERVICE_NAME} \
 		--network host \
 		${DOCKER_IMAGE}:${DOCKER_TAG}
+
+.PHONY: test
+test:
+	@go test --cover -v ./...
