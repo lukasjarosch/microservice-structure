@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	config "github.com/lukasjarosch/microservice-structure/internal/cfg"
+	config "github.com/lukasjarosch/microservice-structure/internal/config"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )
