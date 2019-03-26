@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	config2 "github.com/lukasjarosch/microservice-structure/internal/config"
+	config "github.com/lukasjarosch/microservice-structure/internal/cfg"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )
@@ -39,8 +39,8 @@ func TestGreeting(t *testing.T) {
 		nopLog := logrus.New()
 		nopLog.Out = ioutil.Discard
 
-		config := config2.NewConfig()
-		svc := NewExampleService(config, nopLog)
+		cfg := config.NewConfig()
+		svc := NewExampleService(cfg, nopLog)
 
 		greeting, err := svc.Greeting(tt.name)
 
@@ -61,8 +61,8 @@ func TestFarewell(t *testing.T) {
 		nopLog := logrus.New()
 		nopLog.Out = ioutil.Discard
 
-		config := config2.NewConfig()
-		svc := NewExampleService(config, nopLog)
+		cfg := config.NewConfig()
+		svc := NewExampleService(cfg, nopLog)
 
 		greeting, err := svc.Farewell(tt.name)
 
