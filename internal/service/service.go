@@ -5,14 +5,12 @@ import (
 
 	"errors"
 
-	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	"github.com/lukasjarosch/microservice-structure/internal/config"
 	"github.com/sirupsen/logrus"
 )
 
 // ExampleService is the actual business-logic which you want to provide
 type ExampleService struct {
-	greeter.HelloServer
 	config *config.Config
 	logger *logrus.Logger
 }
