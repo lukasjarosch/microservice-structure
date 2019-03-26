@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+
 	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	"github.com/lukasjarosch/microservice-structure/internal/config"
 	"github.com/lukasjarosch/microservice-structure/internal/service"
@@ -23,10 +25,12 @@ func NewExampleServiceServer(config *config.Config, logger *logrus.Logger) *exam
 
 	// setup the business logic with it's dependencies
 	svc := service.NewExampleService(config, logger)
+	// wrap our business logic in the transport handler
+	handler := NewExampleServiceHandler(svc)
 
 	// attach our business logic to the gRPC server
 	impl := func(g *grpc.Server) {
-		greeter.RegisterHelloServer(g, svc)
+		greeter.RegisterHelloServer(g, handler)
 	}
 
 	// create the actual gRPC server
@@ -51,4 +55,34 @@ func NewExampleServiceServer(config *config.Config, logger *logrus.Logger) *exam
 		GRPC:        server,
 		HTTPGateway: gatewayServer,
 	}
+}
+
+// exampleServiceHandler is the transport-layer wrapper of our business-logic in the server package
+// Everything concerning requests/responses belongs in here. Only conversion (business-model <-> protobuf) should happen here actually.
+type exampleServiceHandler struct {
+	implementation *service.ExampleService
+}
+
+func NewExampleServiceHandler(implementation *service.ExampleService) *exampleServiceHandler {
+	return &exampleServiceHandler{
+		implementation: implementation,
+	}
+}
+
+func (e *exampleServiceHandler) Greeting(ctx context.Context, request *greeter.GreetingRequest) (*greeter.GreetingResponse, error) {
+	greeting, err := e.implementation.Greeting(request.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &greeter.GreetingResponse{Greeting: greeting}, nil
+}
+
+func (e *exampleServiceHandler) Farewell(ctx context.Context, request *greeter.FarewellRequest) (*greeter.FarewellResponse, error) {
+	farewell, err := e.implementation.Farewell(request.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &greeter.FarewellResponse{Farewell: farewell}, nil
 }

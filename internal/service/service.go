@@ -1,15 +1,17 @@
 package service
 
 import (
-	"context"
+	"fmt"
 
-	"github.com/sirupsen/logrus"
+	"errors"
+
 	"github.com/lukasjarosch/microservice-structure-protobuf/greeter"
 	"github.com/lukasjarosch/microservice-structure/internal/config"
-	"errors"
+	"github.com/sirupsen/logrus"
 )
 
-type exampleService struct {
+// ExampleService is the actual business-logic which you want to provide
+type ExampleService struct {
 	greeter.HelloServer
 	config *config.Config
 	logger *logrus.Logger
@@ -19,10 +21,10 @@ var (
 	ErrEmptyName = errors.New("the given name is empty")
 )
 
-// NewExampleService returns our business-implementation of the exampleService
-func NewExampleService(config *config.Config, logger *logrus.Logger) *exampleService {
+// NewExampleService returns our business-implementation of the ExampleService
+func NewExampleService(config *config.Config, logger *logrus.Logger) *ExampleService {
 
-	service := &exampleService{
+	service := &ExampleService{
 		logger: logger,
 		config: config,
 	}
@@ -30,15 +32,20 @@ func NewExampleService(config *config.Config, logger *logrus.Logger) *exampleSer
 	return service
 }
 
-func (e *exampleService) Greeting(ctx context.Context, request *greeter.GreetingRequest) (*greeter.GreetingResponse, error) {
-
-	if request.Name == "" {
-		return nil, ErrEmptyName
+// Greeting implements the business-logic for this RPC
+func (e *ExampleService) Greeting(name string) (greeting string, err error) {
+	if name == "" {
+		return "", ErrEmptyName
 	}
 
-	return &greeter.GreetingResponse{Greeting: "Hey there, " + request.Name}, nil
+	return fmt.Sprintf("Hey there, " + name), nil
 }
 
-func (e *exampleService) Farewell(ctx context.Context, request *greeter.FarewellRequest) (*greeter.FarewellResponse, error) {
-	return &greeter.FarewellResponse{Farewell: "Goodbye, " + request.Name}, nil
+// Farewell implements the business-logic for this RPC
+func (e *ExampleService) Farewell(name string) (farewell string, err error) {
+	if name == "" {
+		return "", ErrEmptyName
+	}
+
+	return fmt.Sprintf("See you soon, " + name), nil
 }
