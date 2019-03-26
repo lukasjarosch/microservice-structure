@@ -53,7 +53,7 @@ func TestGreeting(t *testing.T) {
 	}
 }
 
-// TestFarewell is a basic table-driven unit-test for the Greeting() RPC
+// TestFarewell is a basic table-driven unit-test for the Farewell() RPC
 func TestFarewell(t *testing.T) {
 	g := NewGomegaWithT(t)
 
