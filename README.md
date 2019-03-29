@@ -5,6 +5,10 @@
 Having spent some time developing microservices I have tested a lot of different ways to strucutre a microservice project.
 With this project I want to gradually build a good and stable reference implementation for my future microservices.
 
+#### NOTE
+> I've started on a basic toolkit which builds on this structure: [lukasjarosch/godin](https://github.com/lukasjarosch/godin)
+> I don't know yet if it's worth to keep mainting this repo.
+
 #### Requirements
 + gRPC as main transport protocol
   + API defined by protobuf only
